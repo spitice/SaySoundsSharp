@@ -16,21 +16,15 @@ public class SaySoundConfig {
     }
 
     private bool parseConfig(string configPath) {
-        var parser = new ConfigParser(configPath);
-        var parsed = parser.GetConfigData();
-
-
-        foreach(var mainSection in parsed) {
-            foreach(var dic in mainSection.Value) {
-                string? soundName = "";
-                bool hasSoundName = dic.Value.TryGetValue("sound_trigger", out soundName);
-                if(!hasSoundName || soundName == null)
-                    continue;
-
-                saySounds[dic.Key] = soundName;
-
-            }
+        string[] lines = File.ReadAllLines(configPath);
+        foreach (var line in lines)
+        {
+            saySounds[line] = line;
         }
+
+        Console.WriteLine("[SaySound parseConfig] Parsed saysound list.");
+        Console.WriteLine("  - # of lines in config: " + lines.Length);
+        Console.WriteLine("  - # of saysounds registered: " + saySounds.Count);
 
         return true;
     }

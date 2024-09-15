@@ -14,11 +14,11 @@ public class SaySoundsSharp: BasePlugin {
 
     public override string ModuleName => "SaySoundsSharp";
 
-    public override string ModuleVersion => "0.0.1";
+    public override string ModuleVersion => "0.1.0";
 
     public override string ModuleDescription => "CounterStrikeSharp implementation of SaySounds";
 
-    public override string ModuleAuthor => "faketuna";
+    public override string ModuleAuthor => "faketuna, Spitice";
 
     private SaySoundConfig saySoundConfig = default!;
     private string CHAT_PREFIX = $" {ChatColors.Purple}[SaySounds]{ChatColors.Default}";
@@ -50,9 +50,9 @@ public class SaySoundsSharp: BasePlugin {
         if(sound == null)
             return HookResult.Continue;
 
-        playSaySound(client, saySound, sound);
+        playSaySound(client, saySound);
 
-        printSaySoundNotification(client, saySound.soundName);
+        printSaySoundNotification(client, saySound);
         return HookResult.Handled;
     }
 
@@ -68,9 +68,9 @@ public class SaySoundsSharp: BasePlugin {
         if(sound == null)
             return HookResult.Continue;
 
-        playSaySound(client, saySound, sound);
+        playSaySound(client, saySound);
 
-        printSaySoundNotification(client, saySound.soundName);
+        printSaySoundNotification(client, saySound);
         return HookResult.Handled;
     }
 
@@ -112,21 +112,46 @@ public class SaySoundsSharp: BasePlugin {
 
     }
 
-    private void playSaySound(CCSPlayerController client, UserSaySoundInput saySound, string soundName) {
-        var parameters = new Dictionary<string, float>
+    private void playSaySound(CCSPlayerController client, UserSaySoundInput saySound) {
+        var soundEvtName = "saysounds." + saySound.soundName;
+        soundEvtName = soundEvtName.ToLower();
+        soundEvtName = soundEvtName.Replace("!", "_EXCL_");
+        soundEvtName = soundEvtName.Replace("-", "_MIN_");
+        soundEvtName = soundEvtName.Replace("+", "_PLS_");
+        soundEvtName = soundEvtName.Replace(" ", "_SPC_");
+        soundEvtName = soundEvtName.Replace("~", "_TILD_");
+        soundEvtName = soundEvtName.Replace("^", "_CARET_");
+        soundEvtName = soundEvtName.Replace("(", "_LPAR_");
+        soundEvtName = soundEvtName.Replace(")", "_RPAR_");
+
+        if (saySound.isPitchModified)
         {
-            { "volume", saySound.volume },
-            { "pitch", saySound.pitch }
-        };
-        client.EmitSound(soundName, parameters);
+            soundEvtName += ".p" + saySound.pitch.ToString();
+        }
+
+
+        for (var i = 65; i < 69; i++)
+        {
+        var world = Utilities.GetEntityFromIndex<CCSTeam>(65)!;
+        Console.WriteLine(world.DesignerName);
+        world.EmitSound(soundEvtName);
+
+        }
     }
 
-    private void printSaySoundNotification(CCSPlayerController client, string soundName) {
-        foreach(CCSPlayerController cl in Utilities.GetPlayers()) {
+    private void printSaySoundNotification(CCSPlayerController client, UserSaySoundInput saySound) {
+        var msg = " " + saySoundMessageFormat.Replace("%player%", $"{ChatColors.LightPurple}{client.PlayerName}{ChatColors.Default}").Replace("%soundname%", $"{ChatColors.Lime}{saySound.soundName}{ChatColors.Default}");
+
+        if (saySound.isPitchModified)
+        {
+            msg += $" @{ChatColors.Red}{saySound.pitch}{ChatColors.Default}";
+        }
+
+        foreach (CCSPlayerController cl in Utilities.GetPlayers()) {
             if(!cl.IsValid || cl.IsBot || cl.IsHLTV)
                 continue;
-            
-            cl.PrintToChat(" " + saySoundMessageFormat.Replace("%player%", $"{ChatColors.LightPurple}{client.PlayerName}{ChatColors.Default}").Replace("%soundname%", $"{ChatColors.Lime}{soundName}{ChatColors.Default}"));
+
+            cl.PrintToChat(msg);
         }
     }
 }
